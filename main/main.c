@@ -27,8 +27,6 @@ static const char *TAG = "Main";
 
 #define STACK_SIZE 4096
 
-uint8_t duty_cycle = 10;
-uint8_t count = 0;
 uint8_t btn_level_forward = 0;         
 uint8_t prev_btn_level_forward = 0;
 uint8_t btn_level_backward = 0;         
@@ -42,7 +40,6 @@ void app_main(void)
     // setup
     create_tasks();
 }
-
 
 void mcpwm_motor_control (void *args)
 {
