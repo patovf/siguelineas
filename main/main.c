@@ -23,8 +23,8 @@ static const char *TAG = "Main";
 #define BTN_FORWARD 22
 #define BTN_BACKWARD 4
 
-#define EN_A 14
-#define EN_B 12
+#define EN_A 19
+#define EN_B 18
 
 #define STACK_SIZE 4096
 
@@ -37,7 +37,7 @@ static int adc_raw[2][10];
 
 esp_err_t create_tasks(void);
 void mcpwm_motor_control(void *args);
-// void adc_line_follower(void *args);
+void adc_line_follower(void *args);
 
 void app_main(void)
 {
@@ -90,57 +90,28 @@ void mcpwm_motor_control (void *args)
     gpio_set_level(EN_A, 1);
     gpio_set_level(EN_B, 1);
 
-    ESP_ERROR_CHECK(bdc_motor_set_speed(motor, 250));
-    ESP_ERROR_CHECK(bdc_motor_set_speed(motor_2, 250));
+    ESP_ERROR_CHECK(bdc_motor_set_speed(motor, 300));
+    ESP_ERROR_CHECK(bdc_motor_set_speed(motor_2, 300));
 
     while(1){
-        btn_level_forward = gpio_get_level(BTN_FORWARD);
-        btn_level_backward = gpio_get_level(BTN_BACKWARD);
+      btn_level_forward = gpio_get_level(BTN_FORWARD);
+      btn_level_backward = gpio_get_level(BTN_BACKWARD);
 
-      if (btn_level_forward == 1 && prev_btn_level_forward == 0 && btn_level_backward == 0) 
-      {
-        //ESP_LOGI(TAG, "Forward motor");
+      if (adc_raw[0][4] < 900 && adc_raw[0][0] > 1000) {
+        ESP_LOGI(TAG, "Para la derecha");
         ESP_ERROR_CHECK(bdc_motor_forward(motor));
-        ESP_ERROR_CHECK(bdc_motor_forward(motor_2));
-        prev_btn_level_forward = 1;
-      } 
-
-      if (btn_level_backward == 1 && prev_btn_level_backward == 0 && btn_level_forward == 0) {
-        //ESP_LOGI(TAG, "Backward motor");
-        ESP_ERROR_CHECK(bdc_motor_reverse(motor));
-        ESP_ERROR_CHECK(bdc_motor_reverse(motor_2));
-        prev_btn_level_backward = 1;
-      } 
-      
-      if(btn_level_backward == 0 && btn_level_forward == 0) {
-        //ESP_LOGI(TAG, "Stop motor");
-        prev_btn_level_backward = 0;
-        prev_btn_level_forward = 0;
-        ESP_ERROR_CHECK(bdc_motor_brake(motor));
         ESP_ERROR_CHECK(bdc_motor_brake(motor_2));
       }
-
-      // if (&adc_raw[0][4] == 4095) {
-      //   ESP_LOGI(TAG, "Para la derecha");
-      //   ESP_ERROR_CHECK(bdc_motor_forward(motor));
-      //   ESP_ERROR_CHECK(bdc_motor_brake(motor_2));
-      // } else if (&adc_raw[0][3] == 4095) {
-      //   ESP_LOGI(TAG, "Para la derecha");
-      //   ESP_ERROR_CHECK(bdc_motor_forward(motor));
-      //   ESP_ERROR_CHECK(bdc_motor_brake(motor_2));
-      // } else if (&adc_raw[0][2] == 4095) {
-      //   ESP_LOGI(TAG, "Para el centro");
-      //   ESP_ERROR_CHECK(bdc_motor_forward(motor));
-      //   ESP_ERROR_CHECK(bdc_motor_forward(motor_2));
-      // } else if (&adc_raw[0][1] == 4095) {
-      //   ESP_LOGI(TAG, "Para la izquierda");
-      //   ESP_ERROR_CHECK(bdc_motor_forward(motor_2));
-      //   ESP_ERROR_CHECK(bdc_motor_brake(motor));
-      // } else if (&adc_raw[0][0] == 4095) {
-      //   ESP_LOGI(TAG, "Para la izquierda");
-      //   ESP_ERROR_CHECK(bdc_motor_forward(motor_2));
-      //   ESP_ERROR_CHECK(bdc_motor_brake(motor));
-      // }
+      if (adc_raw[0][2] < 1000 && adc_raw[0][0] > 1000 && adc_raw[0][4] > 1000) {
+        ESP_LOGI(TAG, "Para el centro");
+        ESP_ERROR_CHECK(bdc_motor_forward(motor));
+        ESP_ERROR_CHECK(bdc_motor_forward(motor_2));
+      }
+      if (adc_raw[0][0] < 900&& adc_raw[0][4] > 1000) {
+        ESP_LOGI(TAG, "Para la izquierda");
+        ESP_ERROR_CHECK(bdc_motor_forward(motor_2));
+        ESP_ERROR_CHECK(bdc_motor_brake(motor));
+      }
 
     }
 }
@@ -172,7 +143,7 @@ void adc_line_follower(void *args)
   while(1) {
     ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, ADC_CHANNEL_0, &adc_raw[0][0]));
     //ESP_LOGI(TAG, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, ADC_CHANNEL_0, adc_raw[0][0]);
-
+    
     ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, ADC_CHANNEL_1, &adc_raw[0][1]));
     //ESP_LOGI(TAG, "ADC%d Channel[%d] Raw Data: %d", ADC_UNIT_1 + 1, ADC_CHANNEL_1, adc_raw[0][1]);
 
